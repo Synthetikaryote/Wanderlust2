@@ -72,9 +72,16 @@ public class WorldGenerator : MonoBehaviour {
 		//	sectors.Add(sector);
 		//}
 		//yield return null;
+		Debug.Log("Number Of Logical Processors: " + Environment.ProcessorCount);
+		yield return GenerateSectors();
+		Debug.Log("Done in " + Time.realtimeSinceStartup + " seconds.");
+	}
 
+	IEnumerator GenerateSectors()
+	{
 		sectors = new List<Sector>(9);
-		for (int i = 0; i < sectors.Capacity; ++i) {
+		for (int i = 0; i < sectors.Capacity; ++i)
+		{
 			int x = (i % 3) * Sector.size;
 			int y = (i / 3) * Sector.size;
 			StartCoroutine(ThreadedJob<Sector>.Do(() => {
@@ -87,11 +94,11 @@ public class WorldGenerator : MonoBehaviour {
 			}));
 			yield return null;
 		}
+		while (sectors.Count < 9 || sectors.Any(s => !s.isDone))
+			yield return null;
 	}
 
 	// Update is called once per frame
 	void Update () {
-		//if (sectors.TrueForAll(s => s.isDone))
-		//	Debug.Log("Done in " + Time.realtimeSinceStartup + " seconds.");
 	}
 }
