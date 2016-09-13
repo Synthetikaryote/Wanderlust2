@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// splitting vertices: http://answers.unity3d.com/questions/798510/flat-shading.html
+// ddx and ddy fragment shader: http://answers.unity3d.com/questions/847167/rendering-hard-edges-via-vertex-shader.html#answer-849582
+
 public class Uber : MonoBehaviour {
 
     static Uber instance;
@@ -28,25 +31,20 @@ public class Uber : MonoBehaviour {
 	static uint prime = 4294967291;
 	static uint ord = 4294967290;
 	static uint generator = 4294967279;
-	static uint sy;
-	static uint xs;
-	static uint xy;
 	public static float getFloat(uint x, uint y, uint seed) {
 		//will return values 1=> x >0; replace 'ord' with 'prime' to get 1> x >0
 		//one call to modPow would be enough if all data fits into an ulong
-		sy = modPow(generator, (((ulong)seed) << 32) + (ulong)y, prime);
-		xs = modPow(generator, (((ulong)x) << 32) + (ulong)seed, prime);
-		xy = modPow(generator, (((ulong)sy) << 32) + (ulong)xy, prime);
+		uint sy = modPow(generator, (((ulong)seed) << 32) + (ulong)y, prime);
+		//uint xs = modPow(generator, (((ulong)x) << 32) + (ulong)seed, prime);
+		uint xy = modPow(generator, (((ulong)sy) << 32) + (ulong)x, prime);
 		return ((float)xy) / ord;
 	}
 	public static int RandomRange(int x, int y, int seed, int low, int high) {
 		return low + (int)(getFloat((uint)x, (uint)y, (uint)seed) * (high - low));
 	}
-	static ulong b;
-	static ulong ret;
 	static uint modPow(uint bb, ulong e, uint m) {
-		b = bb;
-		ret = 1;
+		ulong b = bb;
+		ulong ret = 1;
 		while (e > 0) {
 			if (e % 2 == 1) {
 				ret = (ret * b) % m;
