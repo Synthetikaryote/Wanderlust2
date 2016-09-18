@@ -5,17 +5,21 @@ using System.Collections;
 // ddx and ddy fragment shader: http://answers.unity3d.com/questions/847167/rendering-hard-edges-via-vertex-shader.html#answer-849582
 
 public class Uber : MonoBehaviour {
+	public Vector3 playerPos = Vector3.zero;
 
     static Uber instance;
-    public static Uber Instance()
+    public static Uber Instance
     {
-        if (instance == null)
-        {
-            var go = Instantiate(new GameObject("Uber"));
-            DontDestroyOnLoad(go);
-            instance = go.AddComponent<Uber>();
-        }
-        return instance;
+		get
+		{
+			if (instance == null)
+			{
+				var go = Instantiate(new GameObject("Uber"));
+				DontDestroyOnLoad(go);
+				instance = go.AddComponent<Uber>();
+			}
+			return instance;
+		}
     }
 
 	// Use this for initialization
