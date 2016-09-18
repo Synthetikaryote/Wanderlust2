@@ -63,7 +63,7 @@ public class Block {
 }
 
 public class Sector {
-	public static int size = 256;
+	public static int size = 1024;
 	public int id, dataX, dataY, sectorX, sectorY;
 	public bool isDone = false;
 	public Block[,] blocks;
@@ -177,8 +177,8 @@ public class WorldGenerator : MonoBehaviour {
 		int blockDist = Mathf.CeilToInt(viewDist / Block.size);
 		int px = Mathf.FloorToInt(Uber.Instance.playerPos.x / Block.size);
 		int py = Mathf.FloorToInt(Uber.Instance.playerPos.y / Block.size);
-		int blocksDone = 0;
 		for (int i = 0; i < numBlocks; ++i) {
+			// to do: this search could be better.  there must be a better way to find the closest
 			int closestX = 0, closestY = 0;
 			Sector closestSector = null;
 			float closestDistSq = float.MaxValue;
@@ -217,12 +217,13 @@ public class WorldGenerator : MonoBehaviour {
 				return block;
 			}, block => {
 				blockSector.blocks[blockY, blockX] = block;
-				++blocksDone;
-				Debug.Log("Done " + blocksDone + " in " + Time.realtimeSinceStartup + " seconds.");
+				block.GenerateMesh(grass);
+				blocks.Add(block);
+				Debug.Log("Done " + blocks.Count + " in " + Time.realtimeSinceStartup + " seconds.");
 			}));
 			yield return null;
 		}
-		while (blocksDone < numBlocks)
+		while (blocks.Count < numBlocks)
 			yield return null;
 	}
 
