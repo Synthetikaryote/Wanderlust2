@@ -10,6 +10,7 @@ public class Block {
 	public static int size = 128;
 	public GameObject go = null;
 	public bool isBuilding = false;
+	public bool isActive = false;
 
 	MeshFilter meshFilter;
 	MeshRenderer meshRenderer;
@@ -77,7 +78,11 @@ public class Sector {
 		sectorX = dataX / size;
 		sectorY = dataY / size;
 		data = new int[size + 1, size + 1];
-		blocks = new Block[size, size];
+		int blocksXY = size / Block.size;
+		blocks = new Block[blocksXY, blocksXY];
+		for (int y = 0; y < blocksXY; ++y)
+			for (int x = 0; x < blocksXY; ++x)
+				blocks[x, y] = new Block();
 	}
 
 	public void Generate() {
@@ -122,7 +127,9 @@ public class Sector {
 	}
 
 	public Block GetBlock(int blockX, int blockY) {
-		return blocks[blockY, blockX];
+		var withinSectorBlockX = blockX - sectorX * Sector.size / Block.size;
+		var withinSectorBlockY = blockY - sectorY * Sector.size / Block.size;
+		return blocks[withinSectorBlockX, withinSectorBlockY];
 	}
 }
 
@@ -133,14 +140,14 @@ public class WorldGenerator : MonoBehaviour {
 	public static float viewDist = 1024f;
 	List<Sector> sectors;
 	public List<Block> blocks;
-	public Material grass;
+	public Material material;
 
 	// sectorData
 	// 0 1 2
 	// 3 4 5
 	// 6 7 8
 	IEnumerator Start () {
-		grass.mainTextureScale = new Vector2(Sector.size, Sector.size);
+		//material.mainTextureScale = new Vector2(Sector.size, Sector.size);
 		yield return GenerateSectors();
 		Debug.Log("Done sectors in " + Time.realtimeSinceStartup + " seconds.");
 		yield return GenerateBlocks();
@@ -152,8 +159,8 @@ public class WorldGenerator : MonoBehaviour {
 		sectors = new List<Sector>(9);
 		for (int i = 0; i < sectors.Capacity; ++i)
 		{
-			int x = (i % 3) * Sector.size;
-			int y = (i / 3) * Sector.size;
+			int x = ((i % 3) - 1) * Sector.size;
+			int y = ((i / 3) - 1) * Sector.size;
 			StartCoroutine(ThreadedJob<Sector>.Do(() =>
 			{
 				var sector = new Sector(i + 1, x, y);
@@ -189,7 +196,7 @@ public class WorldGenerator : MonoBehaviour {
 					if (sector == null)
 						continue;
 					var block = sector.GetBlock(x, y);
-					if (block == null || !block.isBuilding) {
+					if (!block.isActive) {
 						int dx = px - x;
 						int dy = py - y;
 						float distSq = dx * dx + dy * dy;
@@ -205,20 +212,18 @@ public class WorldGenerator : MonoBehaviour {
 			}
 			// making a copy of these variables for lambda storage purposes
 			Sector blockSector = closestSector;
-			int blockX = closestX;
-			int blockY = closestY;
-			int x2 = blockX * Block.size;
-			int y2 = blockY * Block.size;
+			int x2 = closestX * Block.size;
+			int y2 = closestY * Block.size;
+			var buildBlock = blockSector.GetBlock(closestX, closestY);
+			buildBlock.isActive = true;
+			buildBlock.isBuilding = true;
+			blocks.Add(buildBlock);
 			StartCoroutine(ThreadedJob<Block>.Do(() => {
-				Block block = new Block();
-				// create the block at the found block x and y
-				// in world coords
-				block.GenerateMeshData(ref blockSector.data, x2 - blockSector.dataX, y2 - blockSector.dataY, x2, y2);
-				return block;
+				// create the block at the found block x and y in world coords
+				buildBlock.GenerateMeshData(ref blockSector.data, x2 - blockSector.dataX, y2 - blockSector.dataY, x2, y2);
+				return buildBlock;
 			}, block => {
-				blockSector.blocks[blockY, blockX] = block;
-				block.GenerateMesh(grass);
-				blocks.Add(block);
+				block.GenerateMesh(material);
 				Debug.Log("Done " + blocks.Count + " in " + Time.realtimeSinceStartup + " seconds.");
 			}));
 			yield return null;
@@ -227,24 +232,18 @@ public class WorldGenerator : MonoBehaviour {
 			yield return null;
 	}
 
-	Sector GetSector(int blockX, int blockY)
-	{
+	Sector GetSector(int blockX, int blockY) {
 		int sectorX = Mathf.FloorToInt((float)blockX / Sector.size);
 		int sectorY = Mathf.FloorToInt((float)blockY / Sector.size);
 		foreach (var sector in sectors)
-			if (sector.sectorX == sectorX && sector.sectorY == sectorY) {
+			if (sector.sectorX == sectorX && sector.sectorY == sectorY)
 				return sector;
-			}
 		return null;
 	}
-		Block GetBlock(int blockX, int blockY) {
+	Block GetBlock(int blockX, int blockY) {
 		var sector = GetSector(blockX, blockY);
 		if (sector != null)
 			return sector.GetBlock(blockX, blockY);
 		return null;
-	}
-
-	// Update is called once per frame
-	void Update () {
 	}
 }
