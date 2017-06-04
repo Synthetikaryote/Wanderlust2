@@ -1,3 +1,10 @@
+// Eric's note:
+// found from forum https://answers.unity3d.com/questions/798510/flat-shading.html
+// which led to the old version http://www.battlemaze.com/?p=153
+// which led to this new version http://www.battlemaze.com/?p=234
+// unitypackage download: http://trolltungakreative.com/Unity/lowpolywater.unitypackage
+
+
 // Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
 // Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
 

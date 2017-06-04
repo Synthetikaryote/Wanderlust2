@@ -50,7 +50,7 @@ public class Block {
 	}
 
 	// unity-related - can only be run on the main thread
-	public void GenerateMesh(Material grass) {
+	public void GenerateMesh(ref Material grass) {
 		go = new GameObject("sector_" + posX / size + "_" + posY / size);
 		meshFilter = go.AddComponent<MeshFilter>();
 		meshRenderer = go.AddComponent<MeshRenderer>();
@@ -223,7 +223,7 @@ public class WorldGenerator : MonoBehaviour {
 				buildBlock.GenerateMeshData(ref blockSector.data, x2 - blockSector.dataX, y2 - blockSector.dataY, x2, y2);
 				return buildBlock;
 			}, block => {
-				block.GenerateMesh(material);
+				block.GenerateMesh(ref material);
 				Debug.Log("Done " + blocks.Count + " in " + Time.realtimeSinceStartup + " seconds.");
 			}));
 			yield return null;
